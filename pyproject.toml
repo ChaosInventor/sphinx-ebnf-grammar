@@ -1,0 +1,81 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "sphinx-ebnf-grammar"
+dynamic = ["version"]
+description = 'Sphinx extension for generating documentation from an EBNF file'
+readme = "README.md"
+requires-python = ">=3.8"
+license = "MIT"
+keywords = ["EBNF", "sphinx", "docutils"]
+authors = [
+  { name = "ChaosInventor", email = "chaosinventor@yandex.com" },
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+]
+dependencies = ["parse-ebnf"]
+
+[project.urls]
+Documentation = "https://github.com/ChaosInventor/sphinx-ebnf-grammar#readme"
+Issues = "https://github.com/ChaosInventor/sphinx-ebnf-grammar/issues"
+Source = "https://github.com/ChaosInventor/sphinx-ebnf-grammar"
+
+[tool.hatch.version]
+path = "sphinx_ebnf_grammar/__about__.py"
+
+[tool.hatch.envs.default]
+dependencies = [
+  "coverage[toml]>=6.5",
+  "pytest",
+]
+[tool.hatch.envs.default.scripts]
+test = "pytest {args:tests}"
+test-cov = "coverage run -m pytest {args:tests}"
+cov-report = [
+  "- coverage combine",
+  "coverage report",
+]
+cov = [
+  "test-cov",
+  "cov-report",
+]
+
+[[tool.hatch.envs.all.matrix]]
+python = ["3.8", "3.9", "3.10", "3.11", "3.12"]
+
+[tool.hatch.envs.types]
+dependencies = [
+  "mypy>=1.0.0",
+]
+[tool.hatch.envs.types.scripts]
+check = "mypy --install-types --non-interactive {args:sphinx_ebnf_grammar tests}"
+
+[tool.coverage.run]
+source_pkgs = ["sphinx_ebnf_grammar", "tests"]
+branch = true
+parallel = true
+omit = [
+  "sphinx_ebnf_grammar/__about__.py",
+]
+
+[tool.coverage.paths]
+sphinx_ebnf_grammar = ["sphinx_ebnf_grammar", "*/sphinx-ebnf-grammar/sphinx_ebnf_grammar"]
+tests = ["tests", "*/sphinx-ebnf-grammar/tests"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "no cov",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
+]
