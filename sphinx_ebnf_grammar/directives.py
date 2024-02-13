@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 
+import io
 from docutils import nodes, statemachine
 from docutils.parsers.rst import Directive, directives
 from parse_ebnf import AST, ASTCommentNode, ASTProductNode
@@ -24,7 +25,9 @@ class EBNFGrammar(Directive):
 
         if(len(self.arguments) == 0):
             self.assert_has_content()
-            #TODO: Turn content into IO string and parse
+            ebnf = io.StringIO('\n'.join(self.content))
+            ast.parse(ebnf.read)
+            ebnf.close()
         else:
             #TODO: Make file a dependence so that output is regenerated when
             #it is changed
