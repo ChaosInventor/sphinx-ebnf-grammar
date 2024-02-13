@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 
 import io
-from docutils import nodes, statemachine
+from docutils import nodes, statemachine, utils, parsers
 from docutils.parsers.rst import Directive, directives
 from parse_ebnf import AST, ASTCommentNode, ASTProductNode
 
@@ -35,6 +35,8 @@ class EBNFGrammar(Directive):
             ast.parse(ebnf.read)
             ebnf.close()
 
+        children = []
+
         comments = []
         for node in ast.root:
             if isinstance(node, ASTCommentNode): comments.append(node)
@@ -44,15 +46,23 @@ class EBNFGrammar(Directive):
                 for comment in comments:
                     text += comment.data.strip() + '\n'
 
-                #TODO: Fancier rule rendering
-                text += '\n``' + repr(node) + '``'
+                #TODO: Better way to do this? This is copied from the include
+                #directive's code
+                document = utils.new_document('', self.state.document.settings)
 
-                #FIXME: Use better recursive parsing, this puts the rules in reverse
-                #order
-                lines = statemachine.string2lines(text, self.state.document.settings.tab_width)
-                self.state_machine.insert_input(lines, self.arguments[0] if len(self.arguments) > 0 else '')
+                parser = parsers.rst.Parser()
+                parser.parse(text, document)
+
+                document.transformer.populate_from_components((parser,))
+                document.transformer.apply_transforms()
+
+                for child in document.children:
+                    children.append(child)
 
                 comments.clear()
+
+                #TODO: Fancier rule rendering and white space handling
+                children.append(nodes.literal(text=repr(node)))
             else: self.error(f"Unknown node type at root {node}") #TODO: More descriptive errors
 
-        return []
+        return children
