@@ -25,13 +25,19 @@ class EBNFGrammar(Directive):
 
         if(len(self.arguments) == 0):
             self.assert_has_content()
+
             ebnf = io.StringIO('\n'.join(self.content))
+
             ast.parse(ebnf.read)
             ebnf.close()
         else:
-            #TODO: Make file a dependence so that output is regenerated when
-            #it is changed
-            ebnf = open(self.arguments[0], 'r')
+            try:
+                ebnf = open(self.arguments[0], 'r')
+            except OSError as error:
+                self.severe(f'{self.name}: Could not read {self.arguments[0]}.')
+            else:
+                self.state.document.settings.record_dependencies.add(self.arguments[0])
+
             ast.parse(ebnf.read)
             ebnf.close()
 
