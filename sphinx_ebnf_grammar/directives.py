@@ -30,7 +30,6 @@ class EBNFGrammar(Directive):
         for node in ast.root:
             if isinstance(node, ASTCommentNode): comments.append(node)
             elif isinstance(node, ASTProductNode):
-                #TODO: Handle indention in comments and white space in general better
                 text = ''
                 for comment in comments:
                     text += self.commentToText(comment)
