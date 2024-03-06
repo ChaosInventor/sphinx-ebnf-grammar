@@ -33,7 +33,7 @@ class EBNFGrammar(Directive):
                 #TODO: Handle indention in comments and white space in general better
                 text = ''
                 for comment in comments:
-                    text += comment.data.strip() + '\n'
+                    text += self.commentToText(comment)
 
                 #TODO: Better way to do this? This is copied from the include
                 #directive's code
@@ -89,3 +89,21 @@ class EBNFGrammar(Directive):
                 ebnf.close()
 
         return ast, path
+
+    def commentToText(self, comment):
+        if comment.startLine == comment.endLine:
+            return comment.data.strip() + '\n'
+        else:
+            lines = comment.data.split('\n')
+            for rawline in lines:
+                line = rawline.expandtabs(self.state.document.settings.tab_width)
+                if len(line.strip()) != 0:
+                    indent = len(line) - len(line.lstrip())
+                    break
+
+            text = ''
+            for rawline in lines:
+                #TODO: Add warning or error if a line is indented less than the
+                #first one. In such a case the comment's text would be lost
+                text += f'{rawline[indent:]}\n'
+            return text
