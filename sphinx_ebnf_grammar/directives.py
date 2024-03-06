@@ -21,26 +21,9 @@ class EBNFGrammar(Directive):
     has_content = True
 
     def run(self):
-        ast = AST()
+        ast, path = self.getEbnf()
 
-        if(len(self.arguments) == 0):
-            self.assert_has_content()
-
-            ebnf = io.StringIO('\n'.join(self.content))
-
-            ast.parse(ebnf.read)
-            ebnf.close()
-        else:
-            try:
-                ebnf = open(self.arguments[0], 'r')
-            except OSError as error:
-                self.severe(f'{self.name}: Could not read {self.arguments[0]}.')
-            else:
-                self.state.document.settings.record_dependencies.add(self.arguments[0])
-
-            ast.parse(ebnf.read)
-            ebnf.close()
-
+        #This directive's result
         children = []
 
         comments = []
@@ -54,7 +37,7 @@ class EBNFGrammar(Directive):
 
                 #TODO: Better way to do this? This is copied from the include
                 #directive's code
-                document = utils.new_document('', self.state.document.settings)
+                document = utils.new_document(path, self.state.document.settings)
 
                 parser = parsers.rst.Parser()
                 parser.parse(text, document)
@@ -72,3 +55,37 @@ class EBNFGrammar(Directive):
             else: self.error(f"Unknown node type at root {node}") #TODO: More descriptive errors
 
         return children
+
+    def getEbnf(self):
+        ast = AST()
+        path = ''
+
+        if(len(self.arguments) == 0):
+            path = self.state.document.current_source
+
+            self.assert_has_content()
+
+            ebnf = io.StringIO('\n'.join(self.content))
+
+            try:
+                ast.parse(ebnf.read)
+            finally:
+                ebnf.close()
+        else:
+            path = self.arguments[0]
+
+            try:
+                ebnf = open(self.arguments[0], 'r')
+            except OSError as error:
+                self.severe(f'{self.name}: Could not read {self.arguments[0]}.')
+            else:
+                self.state.document.settings.record_dependencies.add(self.arguments[0])
+
+            try:
+                ast.parse(ebnf.read)
+            except SyntaxError as error:
+                self.error(f'{self.name}: Syntax error in EBNF, {error}')
+            finally:
+                ebnf.close()
+
+        return ast, path
